@@ -1,6 +1,6 @@
 # Darkest Days
 
-A GMod gamemode that is a mix of Half-Life 2 Deathmath, Bioshock Multiplayer, Dishonored and a few other fast paced round-based games.
+A GMod gamemode that is a mix of Half-Life 2 Deathmatch, Bioshock Multiplayer, Dishonored and a few other fast paced round-based games.
 
 # Features
 
