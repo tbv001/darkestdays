@@ -32,11 +32,6 @@ function ENT:Initialize()
 	
 	if SERVER then
 		self:SetPos(self:GetPos()+vector_up*2)
-		/*self:SetModel("models/Items/BoxMRounds.mdl")
-		self.Entity:PhysicsInit(SOLID_VPHYSICS)
-		self.Entity:SetMoveType(MOVETYPE_VPHYSICS)
-		self.Entity:SetSolid(SOLID_VPHYSICS)	
-		self.Entity:SetCollisionGroup( COLLISION_GROUP_WEAPON )*/
 	
 		self.Entity:DrawShadow(false)
 		game.GetWorld():SetDTEntity(0,self.Entity)
@@ -119,10 +114,6 @@ function ENT:Think()
 			end
 		
 		end
-		
-		--print("Red "..ToMinutesSeconds( self:GetTeamTimer(1) ).." | Blue "..ToMinutesSeconds( self:GetTeamTimer(2) ))
-		
-		--print("Red "..red_am.." | Blue "..blue_am)
 	end
 end
 
@@ -390,9 +381,10 @@ ENT.HoldColor = color_white
 ENT.CurColor = Color( 255, 255, 255, 55 )
 	
 local ring = Material( "sgm/playercircle" )
-	
+local beam_col = Color( 255, 255, 255, 255 )
 
 ENT.EdgePoints = {}
+ENT.KOTHMeshes = {}
 ENT.Segments = 20
 
 local ground_check = { mask = MASK_SOLID_BRUSHONLY }
@@ -405,6 +397,8 @@ function PointOnCircle( ang, radius )
 end
 
 function ENT:BuildEdges()
+
+	if self:GetPointIndex() < 1 then return end
 
 	if self.EdgePoints and self.EdgePoints[ self:GetPointIndex() ] then return end
 
@@ -471,10 +465,50 @@ function ENT:BuildEdges()
 
 	self.EdgePoints[ self:GetPointIndex() ] = { gnd_lvl = ground_level, points = tbl, num_points = #tbl }
 
+	self:BuildMeshes()
+
 end
 
-local beam_col = Color( 255, 255, 255, 255 )
+function ENT:BuildMeshes()
+	-- try to make a mesh for each point once
+
+	if self:GetPointIndex() < 1 then return end
+
+	if IsValid( self.KOTHMeshes[ self:GetPointIndex() ] ) then return end
+
+	local new_mesh = Mesh()
+
+	if !IsValid( new_mesh ) then return end
+
+	local cur_tbl = self.EdgePoints[ self:GetPointIndex() ]
+
+	local num = cur_tbl.num_points + 1
+	local start = self:GetPos()
+	start.z = cur_tbl.gnd_lvl
+
+	mesh.Begin( new_mesh, MATERIAL_POLYGON, num + 1 )
+
+	mesh.Position( start )
+	mesh.Color( beam_col.r, beam_col.g, beam_col.b, 35 )
+	mesh.AdvanceVertex()
+
+	for i = 1, num do
+        mesh.Position( cur_tbl.points[ i ] or cur_tbl.points[ 1 ] )
+        mesh.Color( beam_col.r, beam_col.g, beam_col.b, 35 )
+        mesh.AdvanceVertex()
+    end
+
+    mesh.End()
+	
+	self.KOTHMeshes[ self:GetPointIndex() ] = new_mesh
+
+end
+
+
 function ENT:DrawBeams()
+
+	if self:GetPointIndex() < 1 then return end
+
 	if self.EdgePoints and !self.EdgePoints[ self:GetPointIndex() ] then return end
 
 	local tbl = self.EdgePoints[ self:GetPointIndex() ]
@@ -507,21 +541,24 @@ function ENT:DrawBeams()
 
 end
 
+
 function ENT:RebuildMesh()
+
+	if self:GetPointIndex() < 1 then return end
 
 	if self.EdgePoints and !self.EdgePoints[ self:GetPointIndex() ] then return end
 
 	local tbl = self.EdgePoints[ self:GetPointIndex() ]
 
-	if !IsValid( self.Mesh ) then
-		self.Mesh = Mesh()
-	end
+	if !IsValid( self.KOTHMeshes[ self:GetPointIndex() ] ) then return end
+
+	local cur_mesh = self.KOTHMeshes[ self:GetPointIndex() ]
 
 	local num = tbl.num_points + 1
 	local start = self:GetPos()
 	start.z = tbl.gnd_lvl
 
-	mesh.Begin( self.Mesh, MATERIAL_POLYGON, num + 1 )
+	mesh.Begin( cur_mesh, MATERIAL_POLYGON, num + 1 )
 
 	mesh.Position( start )
 	mesh.Color( beam_col.r, beam_col.g, beam_col.b, 35 )
@@ -578,10 +615,12 @@ function ENT:DrawMesh()
 	
 	render.SetStencilReferenceValue(1)
     
-    if IsValid( self.Mesh ) then
+	local cur_mesh = self.KOTHMeshes[ self:GetPointIndex() ]
+
+    if IsValid( cur_mesh ) then
         render.SetColorMaterial()
         cam.IgnoreZ( true )
-        self.Mesh:Draw()
+        cur_mesh:Draw()
         cam.IgnoreZ( false )
     end
 
@@ -605,15 +644,27 @@ function ENT:DrawMask( flip )
     end
 end
 
+function ENT:OnRemove()
+	for k, v in pairs( self.KOTHMeshes ) do
+		if v and IsValid( v ) then
+			v:Destroy()
+		end
+	end
+end
+
 
 function ENT:Draw()
 
 	self:SetRenderBounds( vec_mins, vec_maxs )
 
 	self:BuildEdges()
+	//self:BuildMeshes()
 
-	self:RebuildMesh()
-	self:DrawMesh()
+	-- for potential crash debugging
+	if !DD_SIMPLEKOTHRING then
+		self:RebuildMesh()
+		self:DrawMesh()
+	end
 
 	self:DrawBeams()
 

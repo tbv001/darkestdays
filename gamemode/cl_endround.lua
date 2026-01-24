@@ -11,7 +11,7 @@ local cleanname
 for _,mapname in pairs(mapFiles) do
 	cleanname = string.sub(mapname, 1, -5)
 	if file.Exists("maps/"..cleanname..".png", "GAME") then
-		maps[cleanname] = Material("../maps/"..cleanname..".png")
+		maps[cleanname] = Material("maps/"..cleanname..".png")
 	end
 end
 
@@ -282,7 +282,14 @@ function DrawEndround(time)
 				if maps[name] then
 					surface.SetDrawColor(color_white)
 					surface.SetMaterial(maps[name])
+
+					render.PushFilterMag( TEXFILTER.ANISOTROPIC )
+					render.PushFilterMin( TEXFILTER.ANISOTROPIC )
+
 					surface.DrawTexturedRectRotated(fw/2,fh/2,fw-4,fh-4,0)
+
+					render.PopFilterMag()
+					render.PopFilterMin()
 				end
 				
 				draw.RoundedBoxEx( 2,2,fh*4/5-2,fw-4,fh/5, COLOR_DESELECTED_BRIGHT, false, false, true, true )
@@ -293,9 +300,16 @@ function DrawEndround(time)
 			else
 				draw.RoundedBox( 2,2,2, fw-4, fh-4, COLOR_DESELECTED_BRIGHT)
 				if maps[name] then
-					surface.SetDrawColor(COLOR_DESELECTED_BRIGHT)//
+					surface.SetDrawColor(COLOR_DESELECTED_BRIGHT)
 					surface.SetMaterial(maps[name])
+
+					render.PushFilterMag( TEXFILTER.ANISOTROPIC )
+					render.PushFilterMin( TEXFILTER.ANISOTROPIC )
+
 					surface.DrawTexturedRectRotated(fw/2,fh/2,fw-4,fh-4,0)
+
+					render.PopFilterMag()
+					render.PopFilterMin()
 				end
 				
 				draw.RoundedBoxEx( 2,2,fh*4/5-2,fw-4,fh/5, COLOR_BACKGROUND_DARK, false, false, true, true )

@@ -141,6 +141,11 @@ cvars.AddChangeCallback("_dd_viewmodelZ", function(cvar, oldvalue, newvalue)
 	DD_VIEWMODEL_Z = math.Clamp( tonumber( newvalue ), -10, 0 )
 end)
 
+DD_SIMPLEKOTHRING = tobool( CreateClientConVar("_dd_simplekothring", 0, true, false):GetInt() )
+cvars.AddChangeCallback("_dd_simplekothring", function(cvar, oldvalue, newvalue)
+	DD_SIMPLEKOTHRING = tobool( newvalue )
+end)
+
 
 local draw = draw
 local vgui = vgui

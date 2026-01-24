@@ -101,6 +101,7 @@ function GM:LoadKOTHPoints()
 			ent:SetPos(rand.Pos)
 			ent:SetRadius(rand.R)
 			ent.LastInd = ind
+			ent:SetPointIndex( ind )
 			ent:Spawn()
 			ent:Activate()
 		end
