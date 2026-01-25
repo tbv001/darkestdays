@@ -916,7 +916,7 @@ function GenericBulletCallback(attacker, tr, dmginfo)//function GenericBulletCal
 			end
 		else
 			local phys = ent:GetPhysicsObject()
-			if ent:GetMoveType() == MOVETYPE_VPHYSICS and phys:IsValid() and phys:IsMoveable() then
+			if IsValid(attacker) and ent.SetPhysicsAttacker and ent:GetMoveType() == MOVETYPE_VPHYSICS and phys:IsValid() and phys:IsMoveable() then
 				ent:SetPhysicsAttacker(attacker)
 			end
 		end
