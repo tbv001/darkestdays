@@ -652,7 +652,7 @@ function ENT:OnRemove()
 	end
 end
 
-
+local draw_time = 0
 function ENT:Draw()
 
 	self:SetRenderBounds( vec_mins, vec_maxs )
@@ -662,7 +662,10 @@ function ENT:Draw()
 
 	-- for potential crash debugging
 	if !DD_SIMPLEKOTHRING then
-		self:RebuildMesh()
+		if draw_time < CurTime() then
+			draw_time = CurTime() + 0.01
+			self:RebuildMesh()
+		end
 		self:DrawMesh()
 	end
 
