@@ -441,23 +441,28 @@ function ENT:BuildEdges()
         tr = util.TraceLine( ground_check )
 
         local pos = tr.HitPos + tr.HitNormal * 3
+		local fallback = center + Vector( x, y, 0 )
+		fallback.z = ground_level
 
         if tr.HitWorld then
             table.insert( tbl, 1, pos )
-        else
-            if prev_pos then
-                local len = math.abs( prev_pos.z - pos.z )
-                ground_check.start = pos + ( pos - center ):GetNormal() * 2 + vector_up * len * 0.8
-                ground_check.endpos = center
+        elseif prev_pos then
+            local len = math.abs( prev_pos.z - pos.z )
+            ground_check.start = pos + ( pos - center ):GetNormal() * 2 + vector_up * len * 0.8
+            ground_check.endpos = center
 
-                tr = util.TraceLine( ground_check )
+			tr = util.TraceLine( ground_check )
 
-                if tr.HitWorld then
-                    pos = tr.HitPos + tr.Normal * 2
-                    pos.z = ground_level
-                    table.insert( tbl, 1, pos )
-                end
-            end
+			if tr.HitWorld then
+				pos = tr.HitPos + tr.Normal * 2
+				pos.z = ground_level
+				table.insert( tbl, 1, pos )
+			else
+				-- Can cause some weird visual issues
+				table.insert( tbl, 1, fallback )
+			end
+		else
+			table.insert( tbl, 1, fallback )
         end
 
         prev_pos = pos * 1
@@ -652,7 +657,8 @@ function ENT:OnRemove()
 	end
 end
 
-local draw_time = 0
+local prev_mesh = 0
+local cur_mesh = 0
 function ENT:Draw()
 
 	self:SetRenderBounds( vec_mins, vec_maxs )
@@ -662,12 +668,14 @@ function ENT:Draw()
 
 	-- for potential crash debugging
 	if !DD_SIMPLEKOTHRING then
-		if draw_time < CurTime() then
-			draw_time = CurTime() + 0.01
+		if cur_mesh ~= prev_mesh then
 			self:RebuildMesh()
+			prev_mesh = cur_mesh
 		end
 		self:DrawMesh()
 	end
+
+	cur_mesh = self:GetHoldingTeam()
 
 	self:DrawBeams()
 
